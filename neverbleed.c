@@ -1520,6 +1520,13 @@ static int load_key_stub(neverbleed_iobuf_t *buf)
         const BIGNUM *e, *n;
 
         rsa = EVP_PKEY_get1_RSA(pkey);
+        /* Reject large key sizes */
+        if (RSA_size(rsa) > 4096) {
+            snprintf(errbuf, sizeof(errbuf),
+                "RSA key too large (%d bytes); neverbleed maximum is 4096 bytes (32768 bits)",
+                RSA_size(rsa));
+            goto Respond;
+        }
         type = NEVERBLEED_TYPE_RSA;
         RSA_get0_key(rsa, &n, &e, NULL);
         estr = BN_bn2hex(e);

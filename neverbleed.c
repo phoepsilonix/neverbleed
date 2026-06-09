@@ -799,6 +799,12 @@ static int priv_encdec_stub(const char *name,
         warnf("%s: invalid key index:%zu\n", name, key_index);
         return -1;
     }
+    if (RSA_size(rsa) > (int)sizeof(to)) {
+        errno = 0;
+        warnf("%s: RSA key too large (%d bytes)", name, RSA_size(rsa));
+        RSA_free(rsa);
+        return -1;
+    }
     ret = func((int)flen, from, to, rsa, (int)padding);
     iobuf_dispose(buf);
     RSA_free(rsa);
@@ -875,6 +881,12 @@ static int sign_stub(neverbleed_iobuf_t *buf)
     if ((rsa = daemon_get_rsa(key_index)) == NULL) {
         errno = 0;
         warnf("%s: invalid key index:%zu", __FUNCTION__, key_index);
+        return -1;
+    }
+    if (RSA_size(rsa) > (int)sizeof(sigret)) {
+        errno = 0;
+        warnf("%s: RSA key too large (%d bytes)", __FUNCTION__, RSA_size(rsa));
+        RSA_free(rsa);
         return -1;
     }
     ret = RSA_sign((int)type, m, (unsigned)m_len, sigret, &siglen, rsa);
@@ -1015,6 +1027,10 @@ static int ecdsa_sign_proxy(int type, const unsigned char *m, int m_len, unsigne
         dief("unexpected non-NULL kinv and rp");
     }
 
+    if (m_len < 0) {
+        errno = 0;
+        dief("%s: negative m_len", __FUNCTION__);
+    }
     iobuf_push_str(&buf, "ecdsa_sign");
     iobuf_push_num(&buf, type);
     iobuf_push_bytes(&buf, m, m_len);
@@ -1346,7 +1362,11 @@ static int decrypt_stub(neverbleed_iobuf_t *buf)
 
     rsa = EVP_PKEY_get1_RSA(pkey); /* get0 is available not available in OpenSSL 1.0.2 */
     assert(rsa != NULL);
-    assert(sizeof(decryptbuf) >= RSA_size(rsa));
+    if (RSA_size(rsa) > (int)sizeof(decryptbuf)) {
+        errno = 0;
+        warnf("%s: RSA key too large (%d bytes)", __FUNCTION__, RSA_size(rsa));
+        goto Softfail;
+    }
 
 #if USE_OFFLOAD && defined(OPENSSL_IS_BORINGSSL)
     if (use_offload) {

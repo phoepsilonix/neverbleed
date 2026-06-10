@@ -1121,7 +1121,7 @@ static struct engine_request *bssl_offload_create_request(neverbleed_iobuf_t *bu
         dief("failed to initialize async job\n");
     if (RSA_size(req->data.rsa) > MAX_RSA_BYTES) {
         errno = 0;
-        dief("%s: RSA key too large (%d bytes)", __FUNCTION__, RSA_size(rsa->data.rsa));
+        dief("%s: RSA key too large (%d bytes)", __FUNCTION__, RSA_size(req->data.rsa));
     }
 
     return req;

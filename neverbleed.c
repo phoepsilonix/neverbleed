@@ -1343,7 +1343,7 @@ static int decrypt_stub(neverbleed_iobuf_t *buf)
     void *src;
     EVP_PKEY *pkey;
     RSA *rsa;
-    uint8_t decryptbuf[1024];
+    uint8_t decryptbuf[MAX_RSA_BYTES];
     int decryptlen;
 
     /* parse input */
@@ -1362,8 +1362,7 @@ static int decrypt_stub(neverbleed_iobuf_t *buf)
     assert(rsa != NULL);
     if (RSA_size(rsa) > (int)sizeof(decryptbuf)) {
         errno = 0;
-        warnf("%s: RSA key too large (%d bytes)", __FUNCTION__, RSA_size(rsa));
-        goto Softfail;
+        dief("%s: RSA key too large (%d bytes)", __FUNCTION__, RSA_size(rsa));
     }
 
 #if USE_OFFLOAD && defined(OPENSSL_IS_BORINGSSL)

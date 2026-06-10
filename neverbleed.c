@@ -621,10 +621,10 @@ struct engine_request {
 #ifdef OPENSSL_IS_BORINGSSL
     struct {
         RSA *rsa;
-        uint8_t output[512];
+        uint8_t output[MAX_RSA_BYTES];
         union {
             struct {
-                uint8_t padded[512];
+                uint8_t padded[MAX_RSA_BYTES];
             } digestsign;
         };
     } data;
@@ -1119,8 +1119,10 @@ static struct engine_request *bssl_offload_create_request(neverbleed_iobuf_t *bu
 
     if (req->async_ctx == NULL)
         dief("failed to initialize async job\n");
-    if (RSA_size(req->data.rsa) > sizeof(req->data.output))
-        dief("RSA key too large\n");
+    if (RSA_size(req->data.rsa) > MAX_RSA_BYTES) {
+        errno = 0;
+        dief("%s: RSA key too large (%d bytes)", __FUNCTION__, RSA_size(rsa));
+    }
 
     return req;
 }

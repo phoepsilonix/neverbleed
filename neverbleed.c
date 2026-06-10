@@ -803,9 +803,7 @@ static int priv_encdec_stub(const char *name,
     }
     if (RSA_size(rsa) > MAX_RSA_BYTES) {
         errno = 0;
-        warnf("%s: RSA key too large (%d bytes)", name, RSA_size(rsa));
-        RSA_free(rsa);
-        return -1;
+        dief("%s: RSA key too large (%d bytes)", name, RSA_size(rsa));
     }
     ret = func((int)flen, from, to, rsa, (int)padding);
     iobuf_dispose(buf);
@@ -887,9 +885,7 @@ static int sign_stub(neverbleed_iobuf_t *buf)
     }
     if (RSA_size(rsa) > MAX_RSA_BYTES) {
         errno = 0;
-        warnf("%s: RSA key too large (%d bytes)", __FUNCTION__, RSA_size(rsa));
-        RSA_free(rsa);
-        return -1;
+        dief("%s: RSA key too large (%d bytes)", __FUNCTION__, RSA_size(rsa));
     }
     ret = RSA_sign((int)type, m, (unsigned)m_len, sigret, &siglen, rsa);
     iobuf_dispose(buf);

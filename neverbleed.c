@@ -1364,7 +1364,7 @@ static int decrypt_stub(neverbleed_iobuf_t *buf)
 
     rsa = EVP_PKEY_get1_RSA(pkey); /* get0 is available not available in OpenSSL 1.0.2 */
     assert(rsa != NULL);
-    if (RSA_size(rsa) > (int)sizeof(decryptbuf)) {
+    if (RSA_size(rsa) > NEVERBLEED_MAX_RSA_BYTES) {
         errno = 0;
         dief("%s: RSA key too large (%d bytes)", __FUNCTION__, RSA_size(rsa));
     }
